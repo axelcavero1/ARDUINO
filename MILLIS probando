@@ -1,0 +1,34 @@
+// C++ code
+//
+
+unsigned long millisPasadas = 0;
+const long intervalo = 2000; // segundos 
+bool estadoLed = false; // pa guardar que el LED este en LOW
+
+void setup()
+{
+  pinMode (7, OUTPUT);
+
+  
+}
+
+void loop()
+{
+  unsigned long millisCorriendo = millis();
+  
+ 
+  if ( millisCorriendo - millisPasadas >= intervalo){
+   	millisPasadas = millisCorriendo; //aca sive pa guardar el tiempo corrido en lo pasado, asi lo resta y vuelve a comparar automaticamente
+    
+    estadoLed = !estadoLed; // para cambiar el estado del LED sin poner HIGH ni LOW
+  	if (estadoLed) {
+ 		 digitalWrite(7, HIGH);
+	} else {
+ 		 digitalWrite(7, LOW); // este IF es para cambiar el estado del LED si es falso o true
+}
+    
+  }
+  
+ 
+
+}
