@@ -1,0 +1,52 @@
+unsigned long millisPasadas = 0;
+const long intervalo = 1000; // segundos 
+bool estadoLed = false; // pa guardar que el LED este en LOW
+const int pinesLED[] = {7,6,5};
+const int cantidadLEDS = 3;
+//variables anales
+int valorPot;  
+const int potPin = A0;
+int variableControlada;
+
+void setup()
+{
+  pinMode (7, OUTPUT);
+  pinMode (6, OUTPUT);
+  pinMode (5, OUTPUT);
+  Serial.begin(9600);
+  randomSeed(analogRead(0)); // sirve para usar el CMD ramdom
+	
+  
+}
+
+
+void loop()
+{
+  unsigned long millisCorriendo = millis();
+  valorPot = analogRead(potPin);//Lee el valor del analogic
+  variableControlada = map(valorPot, 2, 1023, 0, 20);//da un valor entre 0 y 255
+  if(variableControlada==0){variableControlada=1;};
+  variableControlada*=500;
+  //Para debugear
+  /*
+  Serial.print("Valor Pot: ");
+  Serial.print(valorPot);
+  Serial.print(" | Variable: ");
+  Serial.println(variableControlada);
+*/
+ 
+  if ( millisCorriendo - millisPasadas >= variableControlada){
+   	millisPasadas = millisCorriendo; //aca sive pa guardar el tiempo corrido en lo pasado, asi lo resta y vuelve a comparar automaticamente
+    
+    int pinAleatorio = random(0, cantidadLEDS); //entre 0 y 2 del array
+   
+    for (int i = 0; i < cantidadLEDS; i++) {
+      digitalWrite(pinesLED[i], LOW);
+    } // esto es para apagar todos los pines primero antes d prender uno ramdom
+    
+    digitalWrite(pinesLED[pinAleatorio], HIGH);
+    
+    Serial.println(millisCorriendo); // ver el tiempo q pasa 
+    
+  }
+}
