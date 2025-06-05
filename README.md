@@ -10,24 +10,14 @@ Brandon Moreyra
 
 https://docs.google.com/document/d/1ndyrVWjGHlbHIExOg-Xm_yNVXN0F79GH_tmiTj2Szf4/edit?usp=sharing
 
-Juego de Reflejos con Semáforo y Puntaje
+Juego de Reflejos con LEDs y Puntaje
 Descripción:
-Juego donde el jugador debe presionar un botón cuando un LED verde se enciende. Se usa temporizador para encendido aleatorio y cuenta aciertos.
-Entradas: botón
-Salidas: LEDs de colores, buzzer
-Contador de flancos: presiones correctas
-Tiempo: millis() para mostrar luces aleatoriamente
-Estados: ESPERA, MOSTRAR LUZ, EVALUAR, PUNTAJE
-
-Se puede utilizar esta idea jugando de a 2 jugadores, agregamos mas LEDs y un boton mas, dividimos las lineas del buzzer entre los aciertos del Jugador 1 y el Jugador 2
-El que llega a 5 ciertos ganaria y se imprime el ganador.
-Para iniciar el juego el loop al inicio solicita que ambos jugadores presionen el boton asi no se repite infinitamente el juego. Al finalizar podemos hacer un delay grande
-que evite el reinicio instantaneo del juego.
-
-2do juego: Los jugadores deberan pasar por la mano por su sensor correspondiente antes que el otro, el primero que la pase suma un punto.
-
-Ambos juegos suman puntos en simultaneo, el ganador sigue siendo el que sume 7 puntos.
-
+Juego donde el jugador debe activar un sensor cuando un LED verde se enciende para acumular más puntos que el otro jugador. Se usa temporizador para encendido aleatorios. Contará con un potenciometro que será usado para variar la frecuencia en la que los LEDs se encenderán. Al terminar, deberá anunciar al ganador del juego y preguntar si se desea jugar otra vez, para reiniciar el juego ambos sensores deben ser activados en simultaneo.
+Entradas: dos sensores.
+Salidas: LEDs de colores, buzzer.
+Contador de flancos: presiones correctas.
+Tiempo: millis() para mostrar luces aleatoriamente.
+Estados: ESPERA, MOSTRAR LUZ, EVALUAR, PUNTAJE.
 
 (Codigo para los sensores y el juego EJEMPLOOO no trabajo hecho)
 
