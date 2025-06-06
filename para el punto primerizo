@@ -1,0 +1,116 @@
+Necesito: Un juego de 3 LEDS (rojo, verde, rojo) donde 2 jugadores diferentes con 2 sensores diferentes sumen punto si pasan la mano en el preciso momento que se prende el LED verde, solo el que pase primero la mano por su sensor sumara puntos el otro jugador no
+
+ChatGPT dijo:
+Perfecto, eso suena como un divertido juego de reflejos. Aquí tienes una descripción general del proyecto y luego te proporcionaré un ejemplo de código para Arduino (que es una de las plataformas más comunes para este tipo de proyectos con sensores y LEDs).
+
+🧩 Requisitos del juego
+Componentes:
+3 LEDs (Rojo, Verde, Rojo)
+
+2 sensores de movimiento (por ejemplo, sensor IR o sensor ultrasónico HC-SR04, aunque el IR es más sencillo para manos cercanas)
+
+2 botones o entradas de sensor (uno por jugador)
+
+Arduino Uno (o compatible)
+
+Resistencias apropiadas para los LEDs
+
+Cables y protoboard
+
+⚙️ Lógica del juego:
+Se encienden los LEDs secuencialmente: rojo (espera) → verde (¡acción!) → rojo (fin del turno).
+
+Cuando el LED verde se enciende:
+
+Se activa la ventana de oportunidad para detectar quién mueve la mano primero.
+
+El primer sensor que detecta la mano durante el verde le da el punto a ese jugador.
+
+El otro jugador no puede puntuar en esa ronda.
+
+Después de un segundo o dos, se reinicia el turno.
+
+🔌 Ejemplo de código en Arduino
+cpp
+Copiar
+Editar
+// Pines de los LEDs
+const int ledRojo1 = 2;
+const int ledVerde = 3;
+const int ledRojo2 = 4;
+
+// Pines de los sensores
+const int sensorJugador1 = 5;
+const int sensorJugador2 = 6;
+
+// Variables de puntuación
+int puntosJugador1 = 0;
+int puntosJugador2 = 0;
+
+bool esperandoRespuesta = false;
+
+void setup() {
+  pinMode(ledRojo1, OUTPUT);
+  pinMode(ledVerde, OUTPUT);
+  pinMode(ledRojo2, OUTPUT);
+
+  pinMode(sensorJugador1, INPUT);
+  pinMode(sensorJugador2, INPUT);
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Luces rojas
+  digitalWrite(ledRojo1, HIGH);
+  digitalWrite(ledRojo2, HIGH);
+  digitalWrite(ledVerde, LOW);
+  delay(1000);
+
+  // Luz verde encendida
+  digitalWrite(ledRojo1, LOW);
+  digitalWrite(ledRojo2, LOW);
+  digitalWrite(ledVerde, HIGH);
+  esperandoRespuesta = true;
+
+  unsigned long tiempoInicio = millis();
+  bool puntoAsignado = false;
+
+  // Se espera hasta 2 segundos por una respuesta
+  while (millis() - tiempoInicio < 2000 && esperandoRespuesta) {
+    if (digitalRead(sensorJugador1) == HIGH) {
+      puntosJugador1++;
+      puntoAsignado = true;
+      esperandoRespuesta = false;
+      Serial.println("Jugador 1 gana el punto!");
+    } else if (digitalRead(sensorJugador2) == HIGH) {
+      puntosJugador2++;
+      puntoAsignado = true;
+      esperandoRespuesta = false;
+      Serial.println("Jugador 2 gana el punto!");
+    }
+  }
+
+  if (!puntoAsignado) {
+    Serial.println("Nadie ganó el punto.");
+  }
+
+  // Apagar verde y mostrar puntos
+  digitalWrite(ledVerde, LOW);
+  delay(1000);
+
+  Serial.print("Puntos Jugador 1: ");
+  Serial.println(puntosJugador1);
+  Serial.print("Puntos Jugador 2: ");
+  Serial.println(puntosJugador2);
+
+  delay(1000); // pausa antes del siguiente turno
+}
+🛠 Notas:
+Asegúrate de que los sensores estén correctamente conectados. Si usas sensores IR, suelen funcionar como botones simples (HIGH cuando detectan algo).
+
+Puedes ajustar el delay(1000) para que el juego sea más rápido o más lento.
+
+Agrega un botón de reset si quieres reiniciar los puntos.
+
+¿Quieres que lo adaptemos para sensores ultrasónicos u otro tipo específico de sensor? ¿O prefieres ver un diagrama de conexión?
