@@ -53,3 +53,73 @@ void loop()
 
 LINK TINKERCAT PARA EL CIRCUITO!
 https://www.tinkercad.com/things/4CvFsWJMbzN-proyecto-arduinovariador-de-velocidad?sharecode=9giPSGWYDHh4q27gSF7hPcV5fisiz12OUSX0r_4pgf4
+
+/////RESPUESTA CHTGPT SOBRE CONTADOR DE PUNTOS
+// Variables globales
+unsigned long millisPasadas = 0;
+const int intervalo = 3000;  // tiempo entre LEDs
+const int cantidadLEDS = 3;
+int pinesLED[] = {4, 5, 7};  // LED aleatorios
+int jugador1 = 0;
+int jugador2 = 0;
+bool valorEntrada = false;  // bandera de entrada habilitada
+bool puntoRegistrado = false;
+int ledActivo = -1;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(2, INPUT);  // Sensor jugador 2
+  pinMode(3, INPUT);  // Sensor jugador 1
+  pinMode(6, INPUT);  // Habilitador
+  pinMode(8, OUTPUT); // LED de estado
+  for (int i = 0; i < cantidadLEDS; i++) {
+    pinMode(pinesLED[i], OUTPUT);
+  }
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  unsigned long millisCorriendo = millis();
+
+  // LED estado encendido si el sensor 1 está activado
+  int valor = digitalRead(3);
+  digitalWrite(8, valor == HIGH ? HIGH : LOW);
+
+  // Si pasó el intervalo, encender LED aleatorio y permitir entrada
+  if (millisCorriendo - millisPasadas >= intervalo) {
+    millisPasadas = millisCorriendo;
+
+    // Apagar LEDs previos
+    for (int i = 0; i < cantidadLEDS; i++) {
+      digitalWrite(pinesLED[i], LOW);
+    }
+
+    // Activar nuevo LED aleatorio
+    ledActivo = random(0, cantidadLEDS);
+    digitalWrite(pinesLED[ledActivo], HIGH);
+
+    // Habilitar lectura de sensores
+    valorEntrada = true;
+    puntoRegistrado = false;
+  }
+
+  // Solo registrar punto si está habilitado y no se ha registrado
+  if (valorEntrada && !puntoRegistrado && digitalRead(6) == HIGH) {
+    if (digitalRead(3) == HIGH) {
+      jugador1++;
+      Serial.println("¡Jugador 1 gana el punto!");
+      Serial.print("Puntos jugador 1: ");
+      Serial.println(jugador1);
+      puntoRegistrado = true;
+      valorEntrada = false;
+    } else if (digitalRead(2) == HIGH) {
+      jugador2++;
+      Serial.println("¡Jugador 2 gana el punto!");
+      Serial.print("Puntos jugador 2: ");
+      Serial.println(jugador2);
+      puntoRegistrado = true;
+      valorEntrada = false;
+    }
+  }
+}
