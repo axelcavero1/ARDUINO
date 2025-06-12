@@ -68,6 +68,8 @@ void loop() {
       }
     }
 
+TINKERCARD LINK: https://www.tinkercad.com/things/1pzeWYt4E1A/editel?returnTo=%2Fdashboard%2Fdesigns%2Fcircuits
+
     // Apagar LED al final
     digitalWrite(ledEncendido, LOW);
   }
