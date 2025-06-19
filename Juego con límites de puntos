@@ -1,0 +1,122 @@
+Cuando el jugador llegue a la cantidad de puntos que indica la variable cantPuntos el juego se detendrá y preguntara si se quiere jugar otra vez. 
+Para jugar otra vez se debe presionar ambos botones.
+
+
+unsigned long millisPasadas = 0;
+const long intervalo = 1000;
+const int pinesLED[] = {4, 3, 2};
+const int cantidadLEDS = 3;
+
+const int jugador1 = 9;
+const int jugador2 = 8;
+const int cantPuntos = 2;
+
+int valorPot;
+const int potPin = A0;
+int variableControlada;
+
+int puntosjugador1 = 0;
+int puntosjugador2 = 0;
+bool juego = true;
+bool victoria1=false;
+bool victoria2=false;
+
+void setup() {
+  pinMode(4, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(jugador1, INPUT_PULLUP);
+  pinMode(jugador2, INPUT_PULLUP);
+  Serial.begin(9600);
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  unsigned long millisCorriendo = millis();
+  //Lee el potenciometro y lo pasa a milisegundos
+  valorPot = analogRead(potPin);
+  variableControlada = map(valorPot, 2, 1023, 1, 20) * 500;
+  //Serial.println(variableControlada);
+  
+  //Serial.print("valor de juego: ");
+    //Serial.println(juego);
+  
+  if (millisCorriendo - millisPasadas >= intervalo && juego) {
+    millisPasadas = millisCorriendo;
+
+    // Apagar todos los LEDs
+    for (int i = 0; i < cantidadLEDS; i++) {
+      digitalWrite(pinesLED[i], LOW);
+    }
+
+    // Elegir LED aleatorio
+    int indiceLED = random(0, cantidadLEDS);
+    int ledEncendido = pinesLED[indiceLED];
+    digitalWrite(ledEncendido, HIGH);
+	
+    //Muestra el led encendido
+    //Serial.print("LED encendido: ");
+    //Serial.println(ledEncendido);
+
+    bool puntoOtorgado = false;
+    unsigned long tiempoInicio = millis();
+
+    // Solo escuchar botones si LED 3 está encendido
+    if (ledEncendido == 3) {
+      while (millis() - tiempoInicio < variableControlada && !puntoOtorgado) {
+        int val1 = digitalRead(jugador1);
+        int val2 = digitalRead(jugador2);
+		
+        //cuenta jugador 1
+        if (val1 == LOW) {
+          puntosjugador1++;
+          Serial.print("Jugador 1 fue mas rapido! Puntos: ");
+          Serial.println(puntosjugador1);
+          puntoOtorgado = true;
+        //cuenta jugador 2
+        } else if (val2 == LOW) {
+          puntosjugador2++;
+          Serial.print("Jugador 2 fue mas rapido! Puntos: ");
+          Serial.println(puntosjugador2);
+          puntoOtorgado = true;
+        }
+        if(puntosjugador1==cantPuntos){
+          juego=false;
+          victoria1=true;
+          //Serial.println("entreeeeeee");
+          
+        }
+        else if(puntosjugador2==cantPuntos){
+          juego=false;
+          victoria2=true;
+        }
+      }
+    }
+
+    // Apagar LED al final
+    digitalWrite(ledEncendido, LOW);
+    //Serial.print("valor de juego: ");
+    //Serial.println(juego);
+    //terminar el juego
+    if(!juego){
+    Serial.println("Juego terminado");
+      if(victoria1){Serial.println("!Jugador 1 ha ganado!");
+     	}else if(victoria2){Serial.println("¡Jugador 2 ha ganado!");}
+    
+    Serial.println("¿Desea jugar otra vez?");
+    //al presionar los botones empieza otro juego
+    int val1 = digitalRead(jugador1);
+    int val2 = digitalRead(jugador2);
+    if(val1 == LOW && val2 == LOW){
+    juego=true;
+    Serial.println("Comienza uno nuevo"); 
+    puntosjugador1=0;
+    puntosjugador2=0;
+    }
+  }
+  }
+}
+
+
+Tinkercad:
+https://www.tinkercad.com/things/gSXtl9kygiC-tp-arduino-con-limites?sharecode=0u7S9jJ_lHnIoYsAYcc7tLLQYG3Pd18qAAw-u1Gyav8
