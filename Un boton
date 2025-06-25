@@ -1,0 +1,184 @@
+#include <LiquidCrystal_I2C.h> // librería I2C del LCD
+
+// Configura la dirección del LCD a 0x27 para una pantalla de 16 caracteres y 2 líneas
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+unsigned long millisPasadas = 0;
+const long intervalo = 1000;
+const int pinesLED[] = {4, 3, 2};
+const int cantidadLEDS = 3;
+
+const int jugador1 = 9;
+const int jugador2 = 8; 
+
+int valorPot;
+const int potPin = A0;
+int variableControlada;
+
+int puntosjugador1 = 0;
+int puntosjugador2 = 0;
+
+// Variables para el mensaje de inicio alternado
+unsigned long ultimoCambioTexto = 0;
+const long intervaloCambioTexto = 700; // Tiempo en milisegundos para mostrar cada parte del mensaje
+bool mostrarPrimeraParte = true;
+
+void setup() {
+  // Inicializa el LCD
+  lcd.init();
+  lcd.backlight(); // Enciende la retroiluminación
+
+  pinMode(4, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(jugador1, INPUT_PULLUP);
+  pinMode(jugador2, INPUT_PULLUP);
+  Serial.begin(9600);
+  randomSeed(analogRead(0));
+
+  lcd.print("Iniciando...");
+  delay(1000);
+  lcd.clear();
+}
+
+void loop() {
+  // Bucle de inicio del juego (mensaje alternado)
+  Serial.println("Presione un boton para iniciar"); 
+  // Cambiado de && a || para que cualquiera de los dos botones inicie el juego
+  while (!(digitalRead(jugador1) == LOW || digitalRead(jugador2) == LOW)) {
+    unsigned long millisActuales = millis();
+
+    if (millisActuales - ultimoCambioTexto >= intervaloCambioTexto) {
+      ultimoCambioTexto = millisActuales;
+      lcd.clear(); // Limpia antes de mostrar nuevo texto
+
+      if (mostrarPrimeraParte) {
+        lcd.setCursor(0, 0);
+        lcd.print("Presione un"); 
+        lcd.setCursor(0, 1);
+        lcd.print("boton"); 
+      } else {
+        lcd.setCursor(0, 0);
+        lcd.print("para iniciar");
+        // Limpia la segunda línea si el mensaje anterior la usó
+        lcd.setCursor(0, 1);
+        lcd.print("                "); // Imprime espacios para limpiar la línea
+      }
+      mostrarPrimeraParte = !mostrarPrimeraParte; // Cambia para el siguiente mensaje
+    }
+  }
+
+  // Limpia el LCD después de que se presionan los botones y antes de que comience el juego
+  lcd.clear();
+  delay(200); // Pequeño retraso para mayor claridad
+
+  // Reiniciar los puntajes
+  puntosjugador1 = 0;
+  puntosjugador2 = 0;
+
+  bool Activo = true;
+
+  while (Activo) {
+    unsigned long millisCorriendo = millis();
+    // Lee el potenciómetro y lo pasa a milisegundos
+    valorPot = analogRead(potPin);
+    variableControlada = map(valorPot, 2, 1023, 1, 20) * 500;
+    // Serial.println(variableControlada); // Esto no se mostrará en el LCD debido a su frecuencia
+
+    if (millisCorriendo - millisPasadas >= intervalo) {
+      millisPasadas = millisCorriendo;
+
+      // Apagar todos los LEDs
+      for (int i = 0; i < cantidadLEDS; i++) {
+        digitalWrite(pinesLED[i], LOW);
+      }
+
+      // Elegir LED aleatorio
+      int indiceLED = random(0, cantidadLEDS);
+      int ledEncendido = pinesLED[indiceLED];
+      digitalWrite(ledEncendido, HIGH);
+
+      // Muestra el led encendido
+      Serial.print("LED encendido: ");
+      Serial.println(ledEncendido);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("LED: ");
+      lcd.print(ledEncendido);
+      lcd.setCursor(0, 1);
+      lcd.print("Esperando...");
+
+      bool puntoOtorgado = false;
+      unsigned long tiempoInicio = millis();
+
+      // Solo escuchar botones si el LED 3 está encendido
+      if (ledEncendido == 3) {
+        while (millis() - tiempoInicio < variableControlada && !puntoOtorgado) {
+          int val1 = digitalRead(jugador1);
+          int val2 = digitalRead(jugador2);
+
+          // Cuenta jugador 1
+          if (val1 == LOW) {
+            puntosjugador1++;
+            Serial.println("Jugador 1 fue mas rapido! Puntos: ");
+            Serial.println(puntosjugador1);
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("Jugador 1!");
+            lcd.setCursor(0, 1);
+            lcd.print("P1:");
+            lcd.print(puntosjugador1);
+            lcd.print(" P2:");
+            lcd.print(puntosjugador2);
+            puntoOtorgado = true;
+            delay(1000); // Mantener mensaje en pantalla por un momento
+          // Cuenta jugador 2
+          } else if (val2 == LOW) {
+            puntosjugador2++;
+            Serial.println("Jugador 2 fue mas rapido! Puntos: ");
+            Serial.println(puntosjugador2);
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("Jugador 2!");
+            lcd.setCursor(0, 1);
+            lcd.print("P1:");
+            lcd.print(puntosjugador1);
+            lcd.print(" P2:");
+            lcd.print(puntosjugador2);
+            puntoOtorgado = true;
+            delay(1000); // Mantener mensaje en pantalla por un momento
+          }
+        }
+      }
+
+      // Apagar LED al final
+      digitalWrite(ledEncendido, LOW);
+
+      // El umbral de puntos ganador se cambió a 2 en tu código anterior,
+      // lo mantengo aquí para consistencia. Si quieres que sea 5, cámbialo.
+      if (puntosjugador1 >= 2 || puntosjugador2 >= 2) {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        if (puntosjugador1 >= 2) { // También aquí se ajusta a 2
+          Serial.println("Jugador 1 ha ganado");
+          lcd.print("Jugador 1 GANA!");
+        } else {
+          Serial.println("Jugador 2 ha ganado");
+          lcd.print("Jugador 2 GANA!");
+        }
+        lcd.setCursor(0, 1);
+        lcd.print("Final!");
+        delay(3000); // Muestra al ganador por unos segundos
+        Activo = false; // Sale del bucle 'while(Activo)'
+      }
+    }
+  }
+  // Después de que un juego termina (Activo se vuelve falso), la función loop()
+  // se repetirá, reiniciando efectivamente el ciclo del juego desde el inicio.
+  Serial.println("Juego terminado. Iniciando nueva ronda...");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Nueva Ronda!");
+  delay(2000);
+  lcd.clear();
+}
