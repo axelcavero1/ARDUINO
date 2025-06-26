@@ -1,0 +1,163 @@
+TP FINAL:
+
+
+#include <LiquidCrystal_I2C.h> // librería I2C del LCD
+
+// Configura la dirección del LCD a 0x27 para una pantalla de 16 caracteres y 2 líneas
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+unsigned long millisPasadas = 0;
+const long intervalo = 1000;
+const int pinesLED[] = {4, 3, 2};
+const int cantidadLEDS = 3;
+
+const int jugador1 = 9;
+const int jugador2 = 8;
+
+int valorPot;
+const int potPin = A0;
+int variableControlada;
+
+int puntosjugador1 = 0;
+int puntosjugador2 = 0;
+
+// Variables para el mensaje de inicio alternado
+unsigned long ultimoCambioTexto = 0;
+const long intervaloCambioTexto = 700;
+bool mostrarPrimeraParte = true;
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+
+  pinMode(4, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(jugador1, INPUT_PULLUP);
+  pinMode(jugador2, INPUT_PULLUP);
+  Serial.begin(9600);
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  Serial.println("Presione un boton para iniciar");
+
+  while (!(digitalRead(jugador1) == LOW)) {
+    unsigned long millisActuales = millis();
+
+    if (millisActuales - ultimoCambioTexto >= intervaloCambioTexto) {
+      ultimoCambioTexto = millisActuales;
+      lcd.clear();
+
+      if (mostrarPrimeraParte) {
+        lcd.setCursor(0, 0);
+        lcd.print("Presione un");
+        lcd.setCursor(0, 1);
+        lcd.print("boton");
+      } else {
+        lcd.setCursor(0, 0);
+        lcd.print("para iniciar");
+        lcd.setCursor(0, 1);
+        lcd.print("                ");
+      }
+      mostrarPrimeraParte = !mostrarPrimeraParte;
+    }
+  }
+
+  lcd.clear();
+  delay(200);
+
+  puntosjugador1 = 0;
+  puntosjugador2 = 0;
+
+  bool Activo = true;
+
+  while (Activo) {
+    unsigned long millisCorriendo = millis();
+    valorPot = analogRead(potPin);
+    variableControlada = map(valorPot, 2, 1023, 1, 20) * 1000;
+
+    if (millisCorriendo - millisPasadas >= intervalo) {
+      millisPasadas = millisCorriendo;
+
+      for (int i = 0; i < cantidadLEDS; i++) {
+        digitalWrite(pinesLED[i], LOW);
+      }
+
+      int indiceLED = random(0, cantidadLEDS);
+      int ledEncendido = pinesLED[indiceLED];
+      digitalWrite(ledEncendido, HIGH);
+      Serial.print("LED encendido: ");
+      Serial.println(ledEncendido);
+
+      bool puntoOtorgado = false;
+      unsigned long tiempoInicio = millis();
+
+      while (millis() - tiempoInicio < variableControlada && !puntoOtorgado) {
+        if (ledEncendido == 3) {
+          int val1 = digitalRead(jugador1);
+          int val2 = digitalRead(jugador2);
+        
+          if (val1 == LOW) {
+            
+            puntosjugador1++;
+            Serial.println("Jugador 1 fue más rápido!");
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("Jugador 1!");
+            lcd.setCursor(0, 1);
+            lcd.print("P1:");
+            lcd.print(puntosjugador1);
+            lcd.print(" P2:");
+            lcd.print(puntosjugador2);
+            puntoOtorgado = true;
+            unsigned long tiempoMostrar1 = millis();
+            while (millis() - tiempoMostrar < variableControlada) {
+             }
+            
+          } else if (val2 == LOW) {
+            puntosjugador2++;
+            Serial.println("Jugador 2 fue más rápido!");
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("Jugador 2!");
+            lcd.setCursor(0, 1);
+            lcd.print("P1:");
+            lcd.print(puntosjugador1);
+            lcd.print(" P2:");
+            lcd.print(puntosjugador2);
+            puntoOtorgado = true;
+            unsigned long tiempoMostrar2 = millis();
+            while (millis() - tiempoMostrar < variableControlada) {
+             }
+          }
+        }
+      }
+
+      digitalWrite(ledEncendido, LOW);
+
+      if (puntosjugador1 >= 2 || puntosjugador2 >= 2) {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        if (puntosjugador1 >= 2) {
+          Serial.println("Jugador 1 ha ganado");
+          lcd.print("Jugador 1 GANA!");
+        } else {
+          Serial.println("Jugador 2 ha ganado");
+          lcd.print("Jugador 2 GANA!");
+        }
+        lcd.setCursor(0, 1);
+        lcd.print("Final!");
+        delay(3000);
+        Activo = false;
+      }
+    }
+  }
+
+  Serial.println("Juego terminado. Iniciando nueva ronda...");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Nueva Ronda!");
+  delay(2000);
+  lcd.clear();
+}
